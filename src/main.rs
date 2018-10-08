@@ -134,7 +134,6 @@ impl ServerData {
             });
             */
             
-            // FIXME would be nice to make 0 stroke kanji sort at the end again
             let mut stroke_mapping = HashMap::<u64, Vec<char>>::new();
             let mut stroke_counts = Vec::<u64>::new();
             for c in lookup_vec
@@ -149,14 +148,24 @@ impl ServerData {
             }
             stroke_counts.sort();
             let mut output_list_html = "<span class=resetspacing>Ordered by stroke count:</span><br>".to_string();
-            for count in stroke_counts
+            if stroke_counts.len() > 0
             {
-                output_list_html += &full_width_digits(&format!("\n{}：", count));
-                for c in stroke_mapping.get(&count).unwrap()
+                for count in stroke_counts
                 {
-                    output_list_html.push(*c);
+                    output_list_html += &full_width_digits(&format!("\n{}：", count));
+                    for c in stroke_mapping.get(&count).unwrap()
+                    {
+                        output_list_html += &"<span style=\"display:inline-block;\">";
+                        output_list_html.push(*c);
+                        output_list_html += &"</span>";
+                        //output_list_html += &"<span style=\"-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;\">\u{200C}</span>"; // make selection double-taps or tap-and-holds single-character
+                    }
+                    output_list_html += &"<br>";
                 }
-                output_list_html += &"<br>";
+            }
+            else
+            {
+                output_list_html += &"(no matches)<br>";
             }
             output_list_html += &"<span class=resetspacing>Some stroke counts might be estimates.<br>Some characters might be too obscure for your system to render. Consider installing Hanazono Mincho (both HanaMinA and HanaMinB) if this is the case.</span>";
             
@@ -255,6 +264,7 @@ impl ServerData {
         new
     }
     
+    // TODO: interpret ② etc.
     fn get_strokes(&self, c : char) -> u64
     {
         if let Some(stroke_count) = self.char_to_strokes.get(&c)
@@ -267,7 +277,30 @@ impl ServerData {
         }
         else
         {
-            0
+            match c
+            {
+                '①' => 1,
+                '②' => 2,
+                '③' => 3,
+                '④' => 4,
+                '⑤' => 5,
+                '⑥' => 6,
+                '⑦' => 7,
+                '⑧' => 8,
+                '⑨' => 9,
+                '⑩' => 10,
+                '⑪' => 11,
+                '⑫' => 12,
+                '⑬' => 13,
+                '⑭' => 14,
+                '⑮' => 15,
+                '⑯' => 16,
+                '⑰' => 17,
+                '⑱' => 18,
+                '⑲' => 19,
+                '⑳' => 20,
+                _ => 0
+            }
         }
     }
 }
