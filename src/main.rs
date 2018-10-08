@@ -155,9 +155,9 @@ impl ServerData {
                     output_list_html += &full_width_digits(&format!("\n{}：", count));
                     for c in stroke_mapping.get(&count).unwrap()
                     {
-                        output_list_html += &"<span style=\"display:inline-block;\">";
+                        output_list_html += &"<c>";
                         output_list_html.push(*c);
-                        output_list_html += &"</span>";
+                        output_list_html += &"</c>";
                         //output_list_html += &"<span style=\"-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;\">\u{200C}</span>"; // make selection double-taps or tap-and-holds single-character
                     }
                     output_list_html += &"<br>";
