@@ -93,7 +93,14 @@ impl ServerData {
             3
         };
         
-        if let Some(input) = args.get("input")
+        let mut input = args.get("input");
+        if let None = input
+        {
+            input = args.get("lookup");
+        }
+        
+        
+        if let Some(input) = input
         {
             output = output.replace("{{{input}}}", input);
             
@@ -451,6 +458,11 @@ fn main() -> Result<(), std::io::Error>
             (GET) (/) =>
             {
                 rouille::Response::html(serverdata.default())
+            },
+            (GET) (/find) =>
+            {
+                
+                rouille::Response::html(serverdata.search(args.clone()))
             },
             (GET) (/search) =>
             {
