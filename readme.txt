@@ -1,0 +1,1 @@
+This is a tool that can compose or decompose kanji by whether a component is in a kanji's ideographic description sequence. Does not handle positioning. Output is sorted by value, then stroke count. Stroke count is estimated if there is no data for it. ids.txt comes from https://github.com/cjkvi/cjkvi-ids/

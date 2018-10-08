@@ -1,0 +1,9 @@
+[package]
+name = "ids_rust"
+version = "0.1.0"
+authors = ["wareya <wareya@gmail.com>"]
+
+[dependencies]
+rouille = "2.2.0"
+regex = "1"
+url = "1"

@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+<head>
+<title>
+Kanji Composition Search Tool
+</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+
+<h1>Kanji Composition Search Tool</h1>
+<form action="/search" method="get">
+<input type="text" name="input" value="{{{input}}}">
+Components and/or kanji
+<br>
+<input type="checkbox" name="reverse" {{{reverse_checked}}}>
+Do decomposition (does composition if unchecked)
+<br>
+<input type="checkbox" name="simple" {{{simple_checked}}}>
+No recursion
+<br>
+<select name="filter_level" {{{filtered_checked}}}>
+  <option value="joyoplus"     {{{selected_joyoplus}}}    >Jouyou + Jinmeiyou</option>
+  <option value="media"        {{{selected_media}}}       >Found in media</option>
+  <option value="kanjidicplus" {{{selected_kanjidicplus}}}>In KANJIDIC2 or media</option>
+  <option value="all"          {{{selected_all}}}         >All</option>
+</select>
+Filtering mode
+<br>
+<input type="submit" value="search">
+<br>
+<div class=output style="max-width: 600px">{{{output}}}</div>
+</form>
+
+</body>
+</html>
