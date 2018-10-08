@@ -134,6 +134,7 @@ impl ServerData {
             });
             */
             
+            // FIXME would be nice to make 0 stroke kanji sort at the end again
             let mut stroke_mapping = HashMap::<u64, Vec<char>>::new();
             let mut stroke_counts = Vec::<u64>::new();
             for c in lookup_vec
@@ -204,29 +205,13 @@ impl ServerData {
         new
     }
     
-    fn components_to_chars(&self, seen : &mut HashSet<char>, set : &HashSet<char>, isrecursive : bool) -> HashSet<char>
+    fn component_to_chars(&self, seen : &mut HashSet<char>, in_c : char, isrecursive : bool) -> HashSet<char>
     {
         let mut new = HashSet::<char>::new();
-        let mut first = true;
         
-        for c in set
+        if let Some(chars) = self.comp_to_char.get(&in_c)
         {
-            if let Some(chars) = self.comp_to_char.get(&c)
-            {
-                if first
-                {
-                    new = chars.clone();
-                }
-                else
-                {
-                    new = new.intersection(&chars).cloned().collect();
-                }
-            }
-            else // ?
-            {
-                new = HashSet::<char>::new();
-            }
-            first = false;
+            new = chars.clone();
         }
         
         new = new.difference(&seen).cloned().collect();
@@ -239,11 +224,32 @@ impl ServerData {
         {
             for c in new.clone()
             {
-                for c2 in self.components_to_chars(seen, &vec!(c).into_iter().collect(), isrecursive)
+                for c2 in self.component_to_chars(seen, c, isrecursive)
                 {
                     new.insert(c2);
                 }
             }
+        }
+        
+        new
+    }
+    
+    fn components_to_chars(&self, seen : &mut HashSet<char>, set : &HashSet<char>, isrecursive : bool) -> HashSet<char>
+    {
+        let mut new = HashSet::<char>::new();
+        let mut first = true;
+        
+        for c in set
+        {
+            if first
+            {
+                new = self.component_to_chars(&mut seen.clone(), *c, isrecursive);
+            }
+            else
+            {
+                new = new.intersection(&self.component_to_chars(&mut seen.clone(), *c, isrecursive)).cloned().collect();
+            }
+            first = false;
         }
         
         new
