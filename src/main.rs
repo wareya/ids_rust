@@ -21,6 +21,22 @@ fn is_ascii(c : char) -> bool
 }
 
 type Mapping = HashMap<char, HashSet<char>>;
+
+fn full_width_digits(text : &String) -> String
+{
+    let mut ret = text.clone();
+    ret = ret.replace("1", "１");
+    ret = ret.replace("2", "２");
+    ret = ret.replace("3", "３");
+    ret = ret.replace("4", "４");
+    ret = ret.replace("5", "５");
+    ret = ret.replace("6", "６");
+    ret = ret.replace("7", "７");
+    ret = ret.replace("8", "８");
+    ret = ret.replace("9", "９");
+    ret = ret.replace("0", "０");
+    ret
+}
     
 struct ServerData {
     template: String,
@@ -106,6 +122,7 @@ impl ServerData {
             let mut lookup_vec = lookup_output.into_iter().filter(|c| if !reverse { filter_function(*c) } else { true } ).collect::<Vec<char>>();
             
             lookup_vec.sort();
+            /*
             lookup_vec.sort_by(|A, B|
             {
                 let a = self.get_strokes(*A);
@@ -115,8 +132,34 @@ impl ServerData {
                 else if b == 0 || a < b { Ordering::Less }
                 else { panic!("logic in sorting is broken") }
             });
+            */
             
-            output = output.replace("{{{output}}}", &lookup_vec.into_iter().collect::<String>());
+            let mut stroke_mapping = HashMap::<u64, Vec<char>>::new();
+            let mut stroke_counts = Vec::<u64>::new();
+            for c in lookup_vec
+            {
+                let count = self.get_strokes(c);
+                if !stroke_mapping.contains_key(&count)
+                {
+                    stroke_mapping.insert(count, Vec::<char>::new());
+                    stroke_counts.push(count);
+                }
+                stroke_mapping.get_mut(&count).unwrap().push(c);
+            }
+            stroke_counts.sort();
+            let mut output_list_html = "<span class=resetspacing>Ordered by stroke count:</span><br>".to_string();
+            for count in stroke_counts
+            {
+                output_list_html += &full_width_digits(&format!("\n{}：", count));
+                for c in stroke_mapping.get(&count).unwrap()
+                {
+                    output_list_html.push(*c);
+                }
+                output_list_html += &"<br>";
+            }
+            output_list_html += &"<span class=resetspacing>Some stroke counts might be estimates.<br>Some characters might be too obscure for your system to render. Consider installing Hanazono Mincho (both HanaMinA and HanaMinB) if this is the case.</span>";
+            
+            output = output.replace("{{{output}}}", &output_list_html);
         }
         else
         {
