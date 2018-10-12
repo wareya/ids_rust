@@ -37,7 +37,7 @@ fn full_width_digits(text : &String) -> String
     ret = ret.replace("0", "０");
     ret
 }
-    
+
 struct ServerData {
     template: String,
     char_to_comp: Mapping,
@@ -306,7 +306,34 @@ impl ServerData {
                 '⑱' => 18,
                 '⑲' => 19,
                 '⑳' => 20,
-                _ => 0
+                
+                '艹' => 4,
+                '⺆' => 2,
+                '既' => 11,
+                '者' => 9,
+                '𭕄' => 3,
+                '卑' => 8,
+                'サ' => 3,
+                'コ' => 2,
+                '㇇' => 1,
+                '⺄' => 1,
+                'よ' => 2,
+                '⺌' => 3,
+                '⺊' => 2,
+                'い' => 2,
+                'ス' => 2,
+                'り' => 2,
+                'ユ' => 2,
+                '㇌' => 1, // should be 2 but is only actually used for composition in a single character where it has one stroke
+                '㇉' => 1,
+                '㇀' => 1,
+                '㇓' => 1,
+                '𛂦' => 2,
+                '𮍌' => 5,
+                '𭣔' => 5,
+                '𮠕' => 8,
+                '𬺻' => 5,
+                _ => {println!("character {} has no stroke count", c); 0}
             }
         }
     }
@@ -418,6 +445,29 @@ fn init() -> std::io::Result<ServerData>
 fn main() -> Result<(), std::io::Error>
 {
     let serverdata = init()?;
+    
+    let mut kanji_asdf = serverdata.char_to_comp.keys().cloned().collect::<Vec<char>>();
+    kanji_asdf.sort_unstable();
+    let mut strokes_to_char = HashMap::<u64, Vec<char>>::new();
+    for kanji in kanji_asdf
+    {
+        let strokes = serverdata.get_strokes(kanji);
+        if !strokes_to_char.contains_key(&strokes)
+        {
+            strokes_to_char.insert(strokes, Vec::new());
+        }
+        strokes_to_char.get_mut(&strokes).unwrap().push(kanji);
+    }
+    
+    let mut strokes_asdf = strokes_to_char.keys().cloned().collect::<Vec<u64>>();
+    strokes_asdf.sort_unstable();
+    println!("most strokes: {}", strokes_asdf.last().unwrap());
+    println!("kanji with that many strokes:");
+    for kanji in strokes_to_char.get(strokes_asdf.last().unwrap()).unwrap()
+    {
+        println!("{}", kanji);
+    }
+    
     
     println!("finished loading");
     
