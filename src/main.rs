@@ -300,6 +300,18 @@ impl ServerData {
         {
             return 4;
         }
+        if c == '䒑'
+        {
+            return 3;
+        }
+        if c == '龷'
+        {
+            return 4;
+        }
+        if c == '阝'
+        {
+            return 3;
+        }
         else if let Some(stroke_count) = self.char_to_strokes.get(&c)
         {
             *stroke_count
@@ -487,6 +499,8 @@ fn build_radical_character_conversion(lines : &Vec<String>) -> (HashMap<char, ch
         }
     }
     mapping.insert('⻌', '辶');
+    mapping.insert('⻏', '阝');
+    mapping.insert('⻖', '阝');
     
     mapping
 }
@@ -501,7 +515,7 @@ fn load_to_string(fname : &str) -> std::io::Result<String>
 
 fn is_non_radical_search_component(c : &char) -> bool
 {
-    "①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳纟门饣马贝车钅鸟页镸讠".contains(*c)
+    "①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳纟门饣马贝车钅鸟页镸讠鱼".contains(*c)
 }
 
 fn init() -> std::io::Result<ServerData>
@@ -540,7 +554,17 @@ fn init() -> std::io::Result<ServerData>
     common_comps.sort_by(|a,b| b.1.cmp(&a.1));
     common_comps.truncate(300);
     let mut common_comps = common_comps.drain(..).collect::<HashMap<_, _>>();
+    // radicals used by jisho
     for mut c in "一｜丶ノ乙亅二亠人⺅𠆢儿入ハ丷冂冖冫几凵刀⺉力勹匕匚十卜卩厂厶又マ九ユ乃𠂉⻌口囗土士夂夕大女子宀寸小⺌尢尸屮山川巛工已巾干幺广廴廾弋弓ヨ彑彡彳⺖⺘⺡⺨⺾⻏⻖也亡及久⺹心戈戸手支攵文斗斤方无日曰月木欠止歹殳比毛氏气水火⺣爪父爻爿片牛犬⺭王元井勿尤五屯巴毋玄瓦甘生用田疋疒癶白皮皿目矛矢石示禸禾穴立⻂世巨冊母⺲牙瓜竹米糸缶羊羽而耒耳聿肉自至臼舌舟艮色虍虫血行衣西臣見角言谷豆豕豸貝赤走足身車辛辰酉釆里舛麦金長門隶隹雨青非奄岡免斉面革韭音頁風飛食首香品馬骨高髟鬥鬯鬲鬼竜韋魚鳥鹵鹿麻亀啇黄黒黍黹無歯黽鼎鼓鼠鼻齊龠".chars()
+    {
+        c = *data.radical_to_char.get(&c).unwrap_or(&c);
+        if data.char_to_comp.contains_key(&c)
+        {
+            common_comps.insert(c, 0);
+        }
+    }
+    // components of common components
+    for mut c in "电壴业㡀氺𠂭镸冋島烏甶耂龶允𧰨习七㐄𠫔肀𠂇予内".chars()
     {
         c = *data.radical_to_char.get(&c).unwrap_or(&c);
         if data.char_to_comp.contains_key(&c)
