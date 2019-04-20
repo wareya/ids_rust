@@ -31,6 +31,33 @@ function disable_radicals()
     let button = document.getElementById("radical_toggle");
     button.onclick = enable_radicals;
 }
+function fire_immediate_update()
+{
+    var req = new XMLHttpRequest();
+    req.onreadystatechange = () =>
+    { 
+        if (req.readyState == 4 && req.status == 200)
+        {
+            if (req.responseText != "")
+            {
+                document.getElementById("output").innerHTML = req.responseText;
+            }
+        }
+    }
+    let formdata = new FormData(document.querySelector("form"));
+    let url = "/searchlite";
+    let joiner = "?";
+    for (var val of formdata)
+    {
+        url += joiner;
+        joiner = "&";
+        joiner += val[0];
+        joiner += "=";
+        joiner += val[1];
+    }
+    req.open("GET", url, true);
+    req.send();
+}
 window.onload = () =>
 {
     for(let ele of document.querySelectorAll(".radical"))
@@ -41,8 +68,17 @@ window.onload = () =>
             if(event.which != 1) return;
             console.log(event);
             document.getElementById("input").value += event.target.textContent;
+            fire_immediate_update();
         }
     }
+    document.getElementById("input").oninput = (e) =>
+    {
+        if(e.isComposing) return;
+        fire_immediate_update();
+    };
+    document.getElementById("reverse").oninput = fire_immediate_update;
+    document.getElementById("simple").oninput = fire_immediate_update;
+    document.getElementById("filter_level").oninput = fire_immediate_update;
 }
 </script>
 </head>
@@ -53,13 +89,13 @@ window.onload = () =>
 <input type="text" name="input" id="input" value="{{{input}}}">
 Components and/or kanji
 <br>
-<input type="checkbox" name="reverse" {{{reverse_checked}}}>
+<input type="checkbox" name="reverse" id="reverse" {{{reverse_checked}}}>
 Do decomposition (does composition if unchecked)
 <br>
-<input type="checkbox" name="simple" {{{simple_checked}}}>
+<input type="checkbox" name="simple" id="simple" {{{simple_checked}}}>
 No recursion
 <br>
-<select name="filter_level">
+<select name="filter_level" id="filter_level">
   <option value="joyoplus"     {{{selected_joyoplus}}}    >Jouyou + Jinmeiyou</option>
   <option value="media"        {{{selected_media}}}       >Found in media</option>
   <option value="kanjidicplus" {{{selected_kanjidicplus}}}>In KANJIDIC2 or media</option>
@@ -73,7 +109,7 @@ Filtering mode
 </div>
 <input type="submit" value="search">
 <br>
-<div class=output>{{{output}}}</div>
+<div class=output id=output>{{{output}}}</div>
 </form>
 <p>Examples:<br>
 <a href="/search?input=人可&filter_level=media">人可 (compose)</a><br>

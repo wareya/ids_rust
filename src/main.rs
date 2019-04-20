@@ -94,7 +94,7 @@ impl ServerData {
         
         output
     }
-    fn search(&self, args : HashMap<&str, &str>) -> String
+    fn search(&self, args : HashMap<&str, &str>, lite : bool) -> String
     {
         let mut output = self.template.clone();
         
@@ -152,17 +152,6 @@ impl ServerData {
             let mut lookup_vec = lookup_output.into_iter().filter(|c| if !reverse { filter_function(*c) } else { true } ).collect::<Vec<char>>();
             
             lookup_vec.sort();
-            /*
-            lookup_vec.sort_by(|A, B|
-            {
-                let a = self.get_strokes(*A);
-                let b = self.get_strokes(*B);
-                if a == b { Ordering::Equal }
-                else if a == 0 || a > b { Ordering::Greater }
-                else if b == 0 || a < b { Ordering::Less }
-                else { panic!("logic in sorting is broken") }
-            });
-            */
             
             let mut stroke_mapping = HashMap::<u64, Vec<char>>::new();
             let mut stroke_counts = Vec::<u64>::new();
@@ -188,7 +177,6 @@ impl ServerData {
                         output_list_html += &"<c>";
                         output_list_html.push(*c);
                         output_list_html += &"</c>";
-                        //output_list_html += &"<span style=\"-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;\">\u{200C}</span>"; // make selection double-taps or tap-and-holds single-character
                     }
                     output_list_html += &"<br>\n";
                 }
@@ -199,10 +187,19 @@ impl ServerData {
             }
             output_list_html += &"<span class=resetspacing>Some stroke counts might be estimates.<br>Some characters might be too obscure for your system to render. Consider installing Hanazono Mincho (both HanaMinA and HanaMinB) if this is the case.</span>";
             
+            if lite
+            {
+                return output_list_html;
+            }
+            
             output = output.replace("{{{output}}}", &output_list_html);
         }
         else
         {
+            if lite
+            {
+                return "".to_string();
+            }
             output = output.replace("{{{input}}}", "");
             output = output.replace("{{{output}}}", "");
         }
@@ -630,12 +627,17 @@ fn main() -> Result<(), std::io::Error>
             (GET) (/find) =>
             {
                 
-                rouille::Response::html(serverdata.search(args.clone()))
+                rouille::Response::html(serverdata.search(args.clone(), false))
+            },
+            (GET) (/searchlite) =>
+            {
+                
+                rouille::Response::html(serverdata.search(args.clone(), true))
             },
             (GET) (/search) =>
             {
                 
-                rouille::Response::html(serverdata.search(args))
+                rouille::Response::html(serverdata.search(args, false))
             },
             _ => rouille::Response::empty_404()
         )
