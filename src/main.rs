@@ -46,10 +46,32 @@ struct ServerData {
     kanjidicplus: HashSet<char>,
     media: HashSet<char>,
     joyoplus: HashSet<char>,
-    char_to_strokes: HashMap<char, u64>
+    char_to_strokes: HashMap<char, u64>,
+    radical_to_char: HashMap<char, char>,
+    common_comps: Vec<char>
 }
 
 impl ServerData {
+    fn radical_text(&self) -> String
+    {
+        let mut radical_html = "".to_string();
+        let mut last_strokes = 0;
+        for c in &self.common_comps
+        {
+            let strokes = self.get_strokes(*c);
+            if strokes != last_strokes
+            {
+                if last_strokes != 0
+                {
+                    radical_html += "<br>\n";
+                }
+                radical_html += &full_width_digits(&format!("\n{}：", strokes));
+                last_strokes = strokes;
+            }
+            radical_html += &format!("<span class=radical>{}</span>", c);
+        }
+        radical_html
+    }
     fn default(&self) -> String
     {
         let keys = vec!(
@@ -67,6 +89,8 @@ impl ServerData {
         {
             output = output.replace(("{{{".to_string()+key.0+"}}}").as_str(), key.1);
         }
+        
+        output = output.replace("{{{radical_search}}}", &self.radical_text());
         
         output
     }
@@ -99,7 +123,6 @@ impl ServerData {
             input = args.get("lookup");
         }
         
-        
         if let Some(input) = input
         {
             output = output.replace("{{{input}}}", input);
@@ -113,7 +136,7 @@ impl ServerData {
             {
                 ServerData::components_to_chars
             }
-            (self, &mut HashSet::<char>::new(), &input.chars().collect::<HashSet<char>>(), !simple);
+            (self, &mut HashSet::<char>::new(), &input.chars().map(|c| *self.radical_to_char.get(&c).unwrap_or(&c)).collect::<HashSet<char>>(), !simple);
             
             let filter_function = |c|
             if filter_level == 0
@@ -167,7 +190,7 @@ impl ServerData {
                         output_list_html += &"</c>";
                         //output_list_html += &"<span style=\"-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;\">\u{200C}</span>"; // make selection double-taps or tap-and-holds single-character
                     }
-                    output_list_html += &"<br>";
+                    output_list_html += &"<br>\n";
                 }
             }
             else
@@ -191,6 +214,8 @@ impl ServerData {
         output = output.replace("{{{selected_media}}}", if filter_level == 1 {"selected"} else {""});
         output = output.replace("{{{selected_kanjidicplus}}}", if filter_level == 2 {"selected"} else {""});
         output = output.replace("{{{selected_all}}}", if filter_level == 3 {"selected"} else {""});
+        
+        output = output.replace("{{{radical_search}}}", &self.radical_text());
         
         output
     }
@@ -274,7 +299,11 @@ impl ServerData {
     // TODO: interpret ② etc.
     fn get_strokes(&self, c : char) -> u64
     {
-        if let Some(stroke_count) = self.char_to_strokes.get(&c)
+        if c == '辶'
+        {
+            return 4;
+        }
+        else if let Some(stroke_count) = self.char_to_strokes.get(&c)
         {
             *stroke_count
         }
@@ -333,32 +362,41 @@ impl ServerData {
                 '𭣔' => 5,
                 '𮠕' => 8,
                 '𬺻' => 5,
+                
+                '⻌' => 3,
+                '辶' => 4,
                 _ => {println!("character {} has no stroke count", c); 0}
             }
         }
     }
 }
 
-fn ids_lines_to_mappings(lines : &Vec<String>) -> (Mapping, Mapping, HashMap<char, Vec<char>>)
+fn ids_lines_to_mappings(lines : &Vec<String>, rewrites : &HashMap<char, char>) -> (Mapping, Mapping, HashMap<char, Vec<char>>, HashMap<char, u64>)
 {
     let mut char_to_comp = Mapping::new();
     let mut comp_to_char = Mapping::new();
-    let mut char_to_first_comp = HashMap::<char, Vec<char>>::new();
+    let mut char_to_first_comp = HashMap::new();
+    let mut comp_frequencies = HashMap::new();
     for line in lines
     {
+        let priority_exists = line.contains('J');
         let mut tokens : Vec<String> = line.split("\t").map(|x| x.to_string()).collect();
         if tokens.len() < 3
         {
             continue;
         }
         tokens.remove(0);
-        let kanji_chars : Vec<char> = tokens.remove(0).chars().collect();
+        let kanji_chars : Vec<char> = tokens.remove(0).chars().map(|c| *rewrites.get(&c).unwrap_or(&c)).collect();
         assert!(kanji_chars.len() == 1);
         let kanji = kanji_chars[0];
         let mut first = true;
         for token in tokens
         {
-            for c in token.chars()
+            if priority_exists && !token.contains('J')
+            {
+                continue;
+            }
+            for c in token.chars().map(|c| *rewrites.get(&c).unwrap_or(&c))
             {
                 if c == kanji || is_descriptor(c) || is_ascii(c)
                 {
@@ -370,6 +408,11 @@ fn ids_lines_to_mappings(lines : &Vec<String>) -> (Mapping, Mapping, HashMap<cha
                     char_to_comp.insert(kanji, HashSet::<char>::new());
                 }
                 char_to_comp.get_mut(&kanji).unwrap().insert(c);
+                
+                if first
+                {
+                    *comp_frequencies.entry(c).or_insert(0) += 1;
+                }
                 
                 if first && !char_to_first_comp.contains_key(&kanji)
                 {
@@ -387,7 +430,7 @@ fn ids_lines_to_mappings(lines : &Vec<String>) -> (Mapping, Mapping, HashMap<cha
         }
     }
     
-    (char_to_comp, comp_to_char, char_to_first_comp)
+    (char_to_comp, comp_to_char, char_to_first_comp, comp_frequencies)
 }
 
 fn build_stroke_count_mapping(lines : &Vec<String>) -> (HashMap<char, u64>)
@@ -417,6 +460,39 @@ fn build_stroke_count_mapping(lines : &Vec<String>) -> (HashMap<char, u64>)
     
     stroke_counts
 }
+fn build_radical_character_conversion(lines : &Vec<String>) -> (HashMap<char, char>)
+{
+    let mut mapping = HashMap::<char, char>::new();
+    for line in lines
+    {
+        let line = line.split('#').next().unwrap();
+        let mut tokens : Vec<String> = line.split(";").map(|x| x.trim().to_string()).collect();
+        if tokens.len() < 2
+        {
+            continue;
+        }
+        let dest = tokens.remove(1);
+        let kanji = std::char::from_u32(u32::from_str_radix(&dest, 16).unwrap()).unwrap();
+        let source = tokens.remove(0);
+        if !source.contains("..")
+        {
+            let radical = std::char::from_u32(u32::from_str_radix(&source, 16).unwrap()).unwrap();
+            mapping.insert(radical, kanji);
+        }
+        else
+        {
+            let parts = source.split("..").collect::<Vec<_>>();
+            for i in u32::from_str_radix(&parts[0], 16).unwrap()..=u32::from_str_radix(parts[1], 16).unwrap()
+            {
+                let c = std::char::from_u32(i).unwrap();
+                mapping.insert(c, kanji);
+            }
+        }
+    }
+    mapping.insert('⻌', '辶');
+    
+    mapping
+}
 
 fn load_to_string(fname : &str) -> std::io::Result<String>
 {
@@ -424,6 +500,11 @@ fn load_to_string(fname : &str) -> std::io::Result<String>
     let mut string = String::new();
     file.read_to_string(&mut string)?;
     return Ok(string);
+}
+
+fn is_non_radical_search_component(c : &char) -> bool
+{
+    "①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳纟门饣马贝车钅鸟页镸".contains(*c)
 }
 
 fn init() -> std::io::Result<ServerData>
@@ -434,12 +515,49 @@ fn init() -> std::io::Result<ServerData>
     let media_kanji = load_to_string("common.txt")?;
     let joyoplus_kanji = load_to_string("joyoplus2.txt")?;
     let unihan_dict_data = load_to_string("Unihan_DictionaryLikeData.txt")?;
+    let unihan_rad_data = load_to_string("EquivalentUnifiedIdeograph.txt")?;
+    
+    let radical_to_char = build_radical_character_conversion(&unihan_rad_data.lines().map(|x| x.to_string()).collect::<Vec<_>>());
     
     let ids_lines : Vec<String> = ids.lines().map(|x| x.to_string()).collect();
-    let (char_to_comp, comp_to_char, char_to_first_comp) = ids_lines_to_mappings(&ids_lines);
-    let stroke_lines : Vec<String> = unihan_dict_data.lines().filter(|x| x.starts_with("U+")).map(|x| x.to_string()).collect();
+    let (char_to_comp, comp_to_char, char_to_first_comp, mut comp_frequencies) = ids_lines_to_mappings(&ids_lines, &radical_to_char);
     
-    Ok(ServerData { template, char_to_comp, comp_to_char, char_to_first_comp, kanjidicplus : kanjidicplus_kanji.chars().collect(), media : media_kanji.chars().collect(), joyoplus : joyoplus_kanji.chars().collect(), char_to_strokes : build_stroke_count_mapping(&stroke_lines) })
+    let stroke_lines : Vec<String> = unihan_dict_data.lines().filter(|x| x.starts_with("U+")).map(|x| x.to_string()).collect();
+    let char_to_strokes = build_stroke_count_mapping(&stroke_lines);
+    
+    let mut data = ServerData {
+        template,
+        char_to_comp,
+        comp_to_char,
+        char_to_first_comp,
+        kanjidicplus : kanjidicplus_kanji.chars().collect(),
+        media : media_kanji.chars().collect(),
+        joyoplus : joyoplus_kanji.chars().collect(),
+        char_to_strokes,
+        radical_to_char,
+        common_comps : Vec::new()
+    };
+    
+    let mut common_comps = comp_frequencies.drain().filter(|(a,_)| !is_non_radical_search_component(a)).collect::<Vec<_>>();
+    common_comps.sort_unstable_by(|a,b| a.0.cmp(&b.0));
+    common_comps.sort_by(|a,b| b.1.cmp(&a.1));
+    common_comps.truncate(300);
+    let mut common_comps = common_comps.drain(..).collect::<HashMap<_, _>>();
+    for mut c in "一｜丶ノ乙亅二亠人⺅𠆢儿入ハ丷冂冖冫几凵刀⺉力勹匕匚十卜卩厂厶又マ九ユ乃𠂉⻌口囗土士夂夕大女子宀寸小⺌尢尸屮山川巛工已巾干幺广廴廾弋弓ヨ彑彡彳⺖⺘⺡⺨⺾⻏⻖也亡及久⺹心戈戸手支攵文斗斤方无日曰月木欠止歹殳比毛氏气水火⺣爪父爻爿片牛犬⺭王元井勿尤五屯巴毋玄瓦甘生用田疋疒癶白皮皿目矛矢石示禸禾穴立⻂世巨冊母⺲牙瓜竹米糸缶羊羽而耒耳聿肉自至臼舌舟艮色虍虫血行衣西臣見角言谷豆豕豸貝赤走足身車辛辰酉釆里舛麦金長門隶隹雨青非奄岡免斉面革韭音頁風飛食首香品馬骨高髟鬥鬯鬲鬼竜韋魚鳥鹵鹿麻亀啇黄黒黍黹無歯黽鼎鼓鼠鼻齊龠".chars()
+    {
+        c = *data.radical_to_char.get(&c).unwrap_or(&c);
+        if data.char_to_comp.contains_key(&c)
+        {
+            common_comps.insert(c, 0);
+        }
+    }
+    common_comps.insert('⻌', 0);
+    let mut common_comps = common_comps.drain().collect::<Vec<_>>();
+    common_comps.sort_unstable_by(|a,b| a.0.cmp(&b.0));
+    common_comps.sort_by(|a,b| data.get_strokes(a.0).cmp(&data.get_strokes(b.0)));
+    data.common_comps = common_comps.drain(..).map(|x| x.0).collect::<_>();
+    
+    Ok(data)
 }
 
 fn main() -> Result<(), std::io::Error>

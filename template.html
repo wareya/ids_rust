@@ -11,13 +11,45 @@ body { font-family: Noto Sans, Verdana, sans-serif; }
 .output { letter-spacing: 3px; }
 .resetspacing { letter-spacing: initial; }
 .output c { display:inline-block; }
+.output { max-width: 600px; }
+#radical_input { max-width: 900px; font-size: 120%; line-height: 160%; letter-spacing: 3px }
 </style>
+<script>
+'use strict';
+function enable_radicals()
+{
+    let picker = document.getElementById("radical_input");
+    picker.style.display = "block";
+    let button = document.getElementById("radical_toggle");
+    button.onclick = disable_radicals;
+}
+function disable_radicals()
+{
+    let picker = document.getElementById("radical_input");
+    picker.style.display = "none";
+    let button = document.getElementById("radical_toggle");
+    button.onclick = enable_radicals;
+}
+window.onload = () =>
+{
+    for(let ele of document.querySelectorAll(".radical"))
+    {
+        ele.onclick = (event) =>
+        {
+            if(event.altKey) return;
+            if(event.which != 1) return;
+            console.log(event);
+            document.getElementById("input").value += event.target.textContent;
+        }
+    }
+}
+</script>
 </head>
 <body>
 
 <h1>Kanji Composition Search Tool</h1>
 <form action="/search" method="get">
-<input type="text" name="input" value="{{{input}}}">
+<input type="text" name="input" id="input" value="{{{input}}}">
 Components and/or kanji
 <br>
 <input type="checkbox" name="reverse" {{{reverse_checked}}}>
@@ -34,9 +66,13 @@ No recursion
 </select>
 Filtering mode
 <br>
+<button type="button" id=radical_toggle onclick="enable_radicals();" style="display: block;">toggle radical input</button>
+<div id=radical_input style="display: none">
+{{{radical_search}}}
+</div>
 <input type="submit" value="search">
 <br>
-<div class=output style="max-width: 600px">{{{output}}}</div>
+<div class=output>{{{output}}}</div>
 </form>
 <p>Examples:<br>
 <a href="/search?input=人可&filter_level=media">人可 (compose)</a><br>
