@@ -312,6 +312,10 @@ impl ServerData {
         {
             return 3;
         }
+        if c == '免'
+        {
+            return 8;
+        }
         else if let Some(stroke_count) = self.char_to_strokes.get(&c)
         {
             *stroke_count
@@ -442,10 +446,10 @@ fn ids_lines_to_mappings(lines : &Vec<String>, rewrites : &HashMap<char, char>) 
     (char_to_comp, comp_to_char, char_to_first_comp, comp_frequencies)
 }
 
-fn build_stroke_count_mapping(lines : &Vec<String>) -> (HashMap<char, u64>)
+fn build_stroke_count_mapping(unicode_lines : &Vec<String>, joyo_lines : &Vec<String>) -> (HashMap<char, u64>)
 {
     let mut stroke_counts = HashMap::<char, u64>::new();
-    for line in lines
+    for line in unicode_lines
     {
         let mut tokens : Vec<String> = line.split("\t").map(|x| x.to_string()).collect();
         if tokens.len() < 3
@@ -463,7 +467,18 @@ fn build_stroke_count_mapping(lines : &Vec<String>) -> (HashMap<char, u64>)
         //println!("`{}`", &kanji_codepoint[2..]);
         let kanji = std::char::from_u32(u32::from_str_radix(&kanji_codepoint[2..], 16).unwrap()).unwrap();
         let stroke_count_text = tokens.remove(0).split(" ").map(|x| x.to_string()).next().unwrap();
-        let stroke_count = stroke_count_text.parse::<u64>().unwrap();
+        let stroke_count = stroke_count_text.parse::<u64>().unwrap( );
+        stroke_counts.insert(kanji, stroke_count);
+    }
+    for line in joyo_lines
+    {
+        let mut tokens : Vec<String> = line.split("\t").map(|x| x.to_string()).collect();
+        if tokens.len() < 4
+        {
+            continue;
+        }
+        let kanji = tokens[0].chars().next().unwrap();
+        let stroke_count = tokens[3].parse().unwrap();
         stroke_counts.insert(kanji, stroke_count);
     }
     
@@ -533,8 +548,9 @@ fn init() -> std::io::Result<ServerData>
     let ids_lines : Vec<String> = ids.lines().map(|x| x.to_string()).collect();
     let (char_to_comp, comp_to_char, char_to_first_comp, mut comp_frequencies) = ids_lines_to_mappings(&ids_lines, &radical_to_char);
     
+    let joyo_lines : Vec<String> = unihan_dict_data.lines().map(|x| x.to_string()).collect();
     let stroke_lines : Vec<String> = unihan_dict_data.lines().filter(|x| x.starts_with("U+")).map(|x| x.to_string()).collect();
-    let char_to_strokes = build_stroke_count_mapping(&stroke_lines);
+    let char_to_strokes = build_stroke_count_mapping(&stroke_lines, &joyo_lines);
     
     let mut data = ServerData {
         template,
@@ -564,7 +580,7 @@ fn init() -> std::io::Result<ServerData>
         }
     }
     // components of common components
-    for mut c in "电壴业㡀氺𠂭镸冋島烏甶耂龶允𧰨习七㐄𠫔肀𠂇予内".chars()
+    for mut c in "电壴业㡀氺镸冋島烏甶耂龶允𧰨习七㐄肀𠂇予内央".chars() // 𠂭𠫔
     {
         c = *data.radical_to_char.get(&c).unwrap_or(&c);
         if data.char_to_comp.contains_key(&c)
