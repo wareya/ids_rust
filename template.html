@@ -47,13 +47,13 @@ function fire_immediate_update()
     let formdata = new FormData(document.querySelector("form"));
     let url = "/searchlite";
     let joiner = "?";
-    for (var val of formdata)
+    for (var val of formdata.entries())
     {
         url += joiner;
         joiner = "&";
-        joiner += val[0];
-        joiner += "=";
-        joiner += val[1];
+        url += val[0];
+        url += "=";
+        url += val[1];
     }
     req.open("GET", url, true);
     req.send();
@@ -86,7 +86,7 @@ window.onload = () =>
 
 <h1>Kanji Composition Search Tool</h1>
 <form action="/search" method="get">
-<input type="text" name="input" id="input" value="{{{input}}}">
+<input type="text" name="input" id="input" value="{{{input}}}"><button type="button" id="clear" onclick="document.getElementById('input').value = '';">clear</button>
 Components and/or kanji
 <br>
 <input type="checkbox" name="reverse" id="reverse" {{{reverse_checked}}}>
