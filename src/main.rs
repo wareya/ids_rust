@@ -504,7 +504,7 @@ fn load_to_string(fname : &str) -> std::io::Result<String>
 
 fn is_non_radical_search_component(c : &char) -> bool
 {
-    "①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳纟门饣马贝车钅鸟页镸".contains(*c)
+    "①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳纟门饣马贝车钅鸟页镸讠".contains(*c)
 }
 
 fn init() -> std::io::Result<ServerData>
