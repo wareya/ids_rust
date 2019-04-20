@@ -67,8 +67,11 @@ window.onload = () =>
         {
             if(event.altKey) return;
             if(event.which != 1) return;
-            console.log(event);
-            document.getElementById("input").value += event.target.textContent;
+            let char = event.target.textContent;
+            if(document.getElementById("input").value.includes(char))
+                document.getElementById("input").value = document.getElementById("input").value.replace(RegExp(char, 'g'), "");
+            else
+                document.getElementById("input").value += char;
             fire_immediate_update();
         }
     }
