@@ -15,6 +15,7 @@ body { font-family: Noto Sans, Verdana, sans-serif; }
 #radical_input { max-width: 900px; font-size: 120%; line-height: 160%; letter-spacing: 3px }
 .radical { cursor:pointer; }
 </style>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/1.0.10/purify.js"></script>
 <script>
 'use strict';
 function enable_radicals()
@@ -40,7 +41,7 @@ function fire_immediate_update()
         {
             if (req.responseText != "")
             {
-                document.getElementById("output").innerHTML = req.responseText;
+                document.getElementById("output").innerHTML = DOMPurify.sanitize(req.responseText);
             }
         }
     }

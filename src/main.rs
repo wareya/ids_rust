@@ -174,9 +174,9 @@ impl ServerData {
                     output_list_html += &full_width_digits(&format!("\n{}：", count));
                     for c in stroke_mapping.get(&count).unwrap()
                     {
-                        output_list_html += &"<c>";
+                        output_list_html += &"<span class=c>";
                         output_list_html.push(*c);
-                        output_list_html += &"</c>";
+                        output_list_html += &"</span>";
                     }
                     output_list_html += &"<br>\n";
                 }
