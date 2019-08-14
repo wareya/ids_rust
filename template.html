@@ -8,13 +8,28 @@ Kanji Composition Search Tool
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link rel="stylesheet" href="https://unpkg.com/turretcss/dist/turretcss.min.css" crossorigin="anonymous">
 <style>
-body { font-family: Noto Sans, Verdana, sans-serif; max-width: 1200px; margin: auto; background: #100B08; color: #D0D0D0; padding: 0px 10px; }
+body { font-family: Noto Sans, Verdana, sans-serif; max-width: 1200px; margin: auto; background: #100B08; color: #D0D0D0; padding: 0px 10px; position: relative }
 h1 { text-align: center }
 .output { letter-spacing: 3px; }
 .resetspacing { letter-spacing: initial; }
 .output c { display:inline-block; }
 .output { font-size: 120%; max-width: 600px; }
-#radical_input { font-size: 120%; line-height: 160%; letter-spacing: 3px; display: block; float: right; min-width: 100px; width: 35%; max-width: 500px; position: relative; top:35px; z-index: 100 }
+#radical_input {
+font-size: 120%;
+line-height: 160%;
+letter-spacing: 3px;
+display: block;
+float: right;
+min-width: 100px;
+width: 35%;
+max-width: 500px;
+position: relative;
+z-index: 100;
+right: 0px;
+.top: 60px;
+height: calc(100vh - 60px);
+overflow-y: auto;
+}
 .radical { cursor:pointer; }
 input, textarea, select { color: black }
 input, label, textarea, select { width: initial; display: initial; display: initial }
@@ -22,6 +37,8 @@ input[type=submit] { font-weight: 600; }
 input:hover, textarea:hover, select:hover, input:focus, textarea:focus, select:focus { color: black }
 .lite { opacity: 0.6; }
 form { margin-right: 130px; }
+form * { max-width: 100% }
+p { max-width: 65% }
 select { width: 157px; font-size: 78%; }
 input[type="checkbox"] + label, input[type="radio"] + label { display: inline }
 </style>
