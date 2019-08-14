@@ -14,12 +14,14 @@ h1 { text-align: center }
 .resetspacing { letter-spacing: initial; }
 .output c { display:inline-block; }
 .output { font-size: 120%; max-width: 600px; }
-#radical_input { font-size: 120%; line-height: 160%; letter-spacing: 3px; display: block; float: right; min-width: 100px; width: 35%; max-width: 500px; position: relative; z-index: 100 }
+#radical_input { font-size: 120%; line-height: 160%; letter-spacing: 3px; display: block; float: right; min-width: 100px; width: 35%; max-width: 500px; position: relative; top:35px; z-index: 100 }
 .radical { cursor:pointer; }
 input, textarea, select { width: initial; display: initial; color: black }
 input[type=submit] { font-weight: 600; }
 input:hover, textarea:hover, select:hover, input:focus, textarea:focus, select:focus { color: black }
 .lite { opacity: 0.6; }
+form { margin-right: 130px; }
+select { width: 157px; font-size: 78%; }
 </style>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/1.0.10/purify.js"></script>
 <script>
@@ -112,8 +114,8 @@ Filtering mode
 <br>
 <input type="submit" value="search">
 <br>
-<div class=output id=output>{{{output}}}</div>
 </form>
+<div class=output id=output>{{{output}}}</div>
 <p class=lite>Some stroke counts might be estimates.<br>Some characters might be too obscure for your system to render. Consider installing Hanazono Mincho (both HanaMinA and HanaMinB) if this is the case.</p>
 <p class=lite>Examples:<br>
 <a href="/search?input=人可&filter_level=media">人可 (compose)</a><br>
