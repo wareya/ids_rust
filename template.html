@@ -5,16 +5,21 @@
 Kanji Composition Search Tool
 </title>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link rel="stylesheet" href="https://unpkg.com/turretcss/dist/turretcss.min.css" crossorigin="anonymous">
 <style>
-body { font-family: Noto Sans, Verdana, sans-serif; max-width: 1200px; margin: auto }
+body { font-family: Noto Sans, Verdana, sans-serif; max-width: 1200px; margin: auto; background: #100B08; color: #D0D0D0; padding: 0px 10px; }
 h1 { text-align: center }
 .output { letter-spacing: 3px; }
 .resetspacing { letter-spacing: initial; }
 .output c { display:inline-block; }
-.output { max-width: 600px; }
-#radical_input { max-width: 900px; font-size: 120%; line-height: 160%; letter-spacing: 3px; display: block; float: right; width: 500px; max-width: calc(100vw - 500px); }
+.output { font-size: 120%; max-width: 600px; }
+#radical_input { font-size: 120%; line-height: 160%; letter-spacing: 3px; display: block; float: right; min-width: 100px; width: 35%; max-width: 500px; position: relative; z-index: 100 }
 .radical { cursor:pointer; }
+input, textarea, select { width: initial; display: initial; color: black }
+input[type=submit] { font-weight: 600; }
+input:hover, textarea:hover, select:hover, input:focus, textarea:focus, select:focus { color: black }
+.lite { opacity: 0.6; }
 </style>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/1.0.10/purify.js"></script>
 <script>
@@ -84,12 +89,12 @@ window.onload = () =>
 
 <h1>Kanji Composition Search Tool</h1>
 <div id=radical_input>
-Radical/Component Picker<br>
+Part Picker<br>
 {{{radical_search}}}
 </div>
 <form action="/search" method="get">
-<input type="text" name="input" id="input" value="{{{input}}}"><button type="button" id="clear" onclick="document.getElementById('input').value = '';">clear</button>
-Components and/or kanji
+<input type="text" name="input" id="input" value="{{{input}}}" placeholder="Insert parts and/or kanji">
+<button type="button" id="clear" onclick="document.getElementById('input').value = '';">clear</button>
 <br>
 <input type="checkbox" name="reverse" id="reverse" {{{reverse_checked}}}>
 Do decomposition (does composition if unchecked)
@@ -109,12 +114,13 @@ Filtering mode
 <br>
 <div class=output id=output>{{{output}}}</div>
 </form>
-<p>Examples:<br>
+<p class=lite>Some stroke counts might be estimates.<br>Some characters might be too obscure for your system to render. Consider installing Hanazono Mincho (both HanaMinA and HanaMinB) if this is the case.</p>
+<p class=lite>Examples:<br>
 <a href="/search?input=人可&filter_level=media">人可 (compose)</a><br>
 <a href="/search?input=剞&reverse=on&filter_level=media">剞 (decompose)</a><br>
 <a href="/search?input=此凵&filter_level=all">此凵 (compose, rare)</a><br>
 <a href="/search?input=鬱&reverse=on&simple=on&filter_level=all">鬱 (decompose, no recursion)</a><br>
 <a href="/search?input=人&simple=on&filter_level=joyoplus">人 (compose, joyo plus, no recursion)</a></p>
-<p>Source code: <a href="https://github.com/wareya/ids_rust/">https://github.com/wareya/ids_rust/</a></p>
+<p class=lite>Source code: <a href="https://github.com/wareya/ids_rust/">https://github.com/wareya/ids_rust/</a></p>
 </body>
 </html>

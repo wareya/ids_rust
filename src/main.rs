@@ -166,7 +166,7 @@ impl ServerData {
                 stroke_mapping.get_mut(&count).unwrap().push(c);
             }
             stroke_counts.sort();
-            let mut output_list_html = "<span class=resetspacing>Ordered by stroke count:</span><br>".to_string();
+            let mut output_list_html = "".to_string();
             if stroke_counts.len() > 0
             {
                 for count in stroke_counts
@@ -185,7 +185,6 @@ impl ServerData {
             {
                 output_list_html += &"(no matches)<br>";
             }
-            output_list_html += &"<span class=resetspacing>Some stroke counts might be estimates.<br>Some characters might be too obscure for your system to render. Consider installing Hanazono Mincho (both HanaMinA and HanaMinB) if this is the case.</span>";
             
             if lite
             {
