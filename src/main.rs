@@ -659,6 +659,10 @@ fn main() -> Result<(), std::io::Error>
             }
         }
         router!(request,
+            (GET) (/css) =>
+            {
+                rouille::Response::from_data("text/css;charset=utf-8", include_str!("turretcss.min.css"))
+            },
             (GET) (/) =>
             {
                 rouille::Response::html(serverdata.default())
